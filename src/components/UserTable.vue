@@ -146,8 +146,3 @@ export default Vue.extend({
   },
 });
 </script>
-<style scoped>
-th {
-  background-color: #f0f3fe;
-}
-</style>
