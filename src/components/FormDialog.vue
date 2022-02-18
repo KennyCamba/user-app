@@ -1,60 +1,61 @@
 <template>
-  <v-dialog v-model="dialogModel" max-width="500px">
-    <!-- <template v-slot:activator="{ on, attrs }">
-      <v-btn
-        elevation="0"
-        color="white"
-        class="blue--text text--accent-4"
-        v-bind="attrs"
-        v-on="on"
-      >
-        <v-icon>mdi-account-plus</v-icon>
-        <span class="ml-2 hidden-xs-only"></span>
-        <div class="hidden-xs-only">Add User</div>
-      </v-btn>
-    </template> -->
+  <v-dialog v-model="dialogModel" max-width="500px" persistent>
     <v-card>
-      <v-card-title>
-        <span class="text-h5">{{ title }}</span>
-      </v-card-title>
-      <v-card-text>
-        <v-container>
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="editedItem.first_name"
-                label="Name"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="editedItem.last_name"
-                label="Last Name"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col cols="12">
-              <v-text-field
-                v-model="editedItem.email"
-                label="Email"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <!-- <v-btn color="blue darken-1" text @click="close"> Cancel </v-btn>
-        <v-btn color="blue darken-1" text @click="save"> Save </v-btn> -->
-      </v-card-actions>
+      <v-form ref="form" lazy-validation>
+        <v-card-title>
+          <span class="text-h5">{{ title }}</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="editedData.first_name"
+                  label="Name"
+                  :rules="nameRules"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="editedData.last_name"
+                  label="Last Name"
+                  :rules="nameRules"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="editedData.email"
+                  label="Email"
+                  type="email"
+                  :rules="emailRules"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="dialogModel = false">
+            Cancel
+          </v-btn>
+          <v-btn color="blue darken-4" text @click="save" :loading="loading">
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-form>
     </v-card>
   </v-dialog>
 </template>
 
 <script lang="ts">
+import { UserDto } from "@/api/userService";
 import Vue from "vue";
+
+type VForm = Vue & {
+  validate: () => boolean;
+};
 
 export default Vue.extend({
   props: {
@@ -66,15 +67,38 @@ export default Vue.extend({
       type: String,
       default: "",
     },
+    loading: {
+      type: Boolean,
+      default: () => false,
+    },
+    editedUser: {
+      type: Object,
+      default: () => ({
+        id: 0,
+        email: "",
+        first_name: "",
+        last_name: "",
+        avatar: "",
+      }),
+    },
   },
   data() {
     return {
-      editedItem: {
-        first_name: "",
-        last_name: "",
-        email: "",
-      },
+      nameRules: [(value: string) => !!value || "Required."],
+      emailRules: [
+        (value: string) => !!value || "Required.",
+        (value: string) =>
+          /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
+          "Invalid email address.",
+      ],
     };
+  },
+  methods: {
+    save() {
+      if ((this.$refs?.form as VForm).validate()) {
+        this.$emit("save", this.editedData);
+      }
+    },
   },
   computed: {
     dialogModel: {
@@ -83,6 +107,14 @@ export default Vue.extend({
       },
       set: function (value: boolean): void {
         this.$emit("update:dialog", value);
+      },
+    },
+    editedData: {
+      get: function (): UserDto {
+        return { ...this.editedUser };
+      },
+      set: function (value: UserDto): void {
+        this.$emit("update:editedUser", value);
       },
     },
   },
