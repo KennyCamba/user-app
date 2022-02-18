@@ -1,19 +1,37 @@
 <template>
   <div>
-    <div class="my-4 d-flex justify-space-between">
-      <div class="heading-6">Users ({{ totalItems }})</div>
-      <v-btn
-        elevation="0"
-        color="white"
-        class="blue--text text--accent-4"
-        v-if="selected.length > 0"
-        @click="openEmail"
-      >
-        <v-icon>mdi-email</v-icon>
-        <span class="ml-2"></span>
-        Send a Message
-      </v-btn>
-    </div>
+    <v-toolbar flat color="transparent" class="my-2" dense>
+      <v-toolbar-title>Users ({{ totalItems }})</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <div>
+        <form-dialog
+          :dialog="dialog"
+          :title="dialogTitle"
+          @update:dialog="dialog = $event"
+        />
+        <v-btn
+          elevation="0"
+          color="white"
+          class="blue--text text--accent-4"
+          @click="addUser"
+        >
+          <v-icon>mdi-account-plus</v-icon>
+          <span class="ml-2 hidden-xs-only"></span>
+          <div class="hidden-xs-only">Add User</div>
+        </v-btn>
+        <v-btn
+          elevation="0"
+          color="white"
+          class="blue--text text--accent-4 ml-2"
+          v-if="selected.length > 0"
+          @click="openEmail"
+        >
+          <v-icon>mdi-email</v-icon>
+          <span class="ml-2 hidden-xs-only"></span>
+          <div class="hidden-xs-only">Send a Message</div>
+        </v-btn>
+      </div>
+    </v-toolbar>
     <v-data-table
       :headers="headers"
       :items="items"
@@ -34,6 +52,7 @@
       @item-selected="onItemSelected"
       @toggle-select-all="onToggleSelectAll"
     >
+      <v-toolbar flat></v-toolbar>
       <template v-slot:[`item.avatar`]="{ item }">
         <v-avatar size="36" color="primary">
           <img :src="item.avatar" v-if="item.avatar" />
@@ -46,12 +65,17 @@
           <span> <v-icon small color="blue">mdi-email</v-icon> </span></a
         >
       </template>
+      <template v-slot:[`item.actions`]="{ item }">
+        <v-icon small class="mr-2" @click="editUser(item)"> mdi-pencil </v-icon>
+        <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+      </template>
     </v-data-table>
   </div>
 </template>
 <script lang="ts">
 import UserService, { UserDto } from "@/api/userService";
 import Vue from "vue";
+import FormDialog from "./FormDialog.vue";
 
 interface DataType {
   itemsPerPage: number;
@@ -59,11 +83,15 @@ interface DataType {
   pageCount: number;
   totalItems: number;
   loading: boolean;
+  dialog: boolean;
+  dialogTitle: string;
   selected: string[];
   headers: unknown[];
   items: UserDto[];
+  editedItem: UserDto;
 }
 export default Vue.extend({
+  components: { FormDialog },
   data(): DataType {
     return {
       itemsPerPage: 10,
@@ -71,7 +99,16 @@ export default Vue.extend({
       pageCount: 0,
       totalItems: 0,
       loading: true,
+      dialog: false,
+      dialogTitle: "",
       selected: [],
+      editedItem: {
+        id: 0,
+        email: "",
+        first_name: "",
+        last_name: "",
+        avatar: "",
+      },
       headers: [
         {
           text: "Photo",
@@ -92,6 +129,11 @@ export default Vue.extend({
         {
           text: "Email",
           value: "email",
+          class: "subtitle-2",
+        },
+        {
+          text: "Actions",
+          value: "actions",
           class: "subtitle-2",
         },
       ],
@@ -139,6 +181,15 @@ export default Vue.extend({
     },
     openEmail() {
       window.open(`mailto:${this.selected.join(",")}`);
+    },
+    addUser() {
+      this.dialogTitle = "Add User";
+      this.dialog = true;
+    },
+    editUser(item: UserDto) {
+      this.dialogTitle = "Edit User";
+      this.editedItem = item;
+      this.dialog = true;
     },
   },
   mounted() {
