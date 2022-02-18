@@ -7,7 +7,7 @@ import UserTable from "@/components/UserTable.vue";
 import Vue from "vue";
 
 export default Vue.extend({
-  name: "Home",
+  name: "Users",
 
   components: {
     UserTable,

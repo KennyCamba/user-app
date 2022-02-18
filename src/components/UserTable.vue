@@ -5,11 +5,12 @@
       <v-btn
         elevation="0"
         color="white"
-        class="blue--text accent-4"
+        class="blue--text text--accent-4"
         v-if="selected.length > 0"
         @click="openEmail"
       >
         <v-icon>mdi-email</v-icon>
+        <span class="ml-2"></span>
         Send a Message
       </v-btn>
     </div>
@@ -18,12 +19,16 @@
       :items="items"
       :loading="loading"
       selectable-key="id"
+      checkbox-color="blue accent-4"
+      disable-filtering
+      disable-sort
+      mobile-breakpoint="xs"
       show-select
       :footer-props="{
         itemsPerPageOptions: [5, 10, 20, 100],
       }"
       :items-per-page="itemsPerPage"
-      class="elevation-1"
+      class="elevation-2"
       @update:options="paginate"
       :server-items-length="totalItems"
       @item-selected="onItemSelected"
@@ -61,7 +66,7 @@ interface DataType {
 export default Vue.extend({
   data(): DataType {
     return {
-      itemsPerPage: 5,
+      itemsPerPage: 10,
       page: 1,
       pageCount: 0,
       totalItems: 0,
